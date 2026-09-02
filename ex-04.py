@@ -1,5 +1,3 @@
-from turtledemo.round_dance import stop
-
 name=input("Enter your name:")
 grade1=int(input("Enter your first grade:"))
 grade2=int(input("Enter your second grade:"))
