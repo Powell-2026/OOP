@@ -28,6 +28,10 @@ while (1):
                 break
     elif choice == "3":
         old_element=int(input("Enter the number you want to replace: "))
+        for i in List01:
+            if i != old_element:
+                print("Please enter a number from the current list")
+                break
         new_element=int(input("Enter the new number: "))
         index = List01.index(old_element)
         List01[index] = new_element
