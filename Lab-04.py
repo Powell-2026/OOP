@@ -12,8 +12,14 @@ class Customer(object):
         self.acc_no=input("Enter Customer Account Number: ")
         self.balance=input("Enter Customer Balance: ")
     def transfer_funds(self,bene_cust_obj,amount):
-        self.balance-=amount
-        bene_cust_obj.balace+=amount
+        if amount <= 0:
+            print("Amount must be greater than zero.")
+        elif amount >self.balance:
+            print("Insufficient funds.")
+        else:
+            self.balance-=amount
+            bene_cust_obj.balance+=amount
+            print("Transfer Successful.")
     def assign_card(self,card_obj):
         self.credit_card.append(card_obj)
     def display_customers(self):
@@ -56,24 +62,106 @@ while True:
         f1=open("customer.dat","ab")
         pickle.dump(customer,f1)
         f1.close()
+
     elif choice=="2":
         card.create_card()
         f1=open("card.dat","ab")
         pickle.dump(card,f1)
         f1.close()
-    elif choice=="3":
-        id = input("Enter Customer ID: ")
-        f2=open("customer.dat","rb")
-        data=pickle.load(f2)
-        for i in f2:
-            if id == i.data.cid:
-                bene_cust_obj=i
+
+    elif choice == "3":
+        sender_id = input("Enter Sender Customer ID: ")
+        receiver_id = input("Enter Recipient Customer ID: ")
+        customers = []
+        try:
+            with open("customer.dat", "rb") as f2:
+                while True:
+                    try:
+                        data = pickle.load(f2)
+                        data.balance = float(data.balance)
+                        customers.append(data)
+                    except EOFError:
+                        break
+        except FileNotFoundError:
+            print("No customer file found.")
+            continue
+        sender = None
+        recipient = None
+        for cust in customers:
+            if cust.cid == sender_id:
+                sender = cust
+            if cust.cid == receiver_id:
+                recipient = cust
+        if sender is None:
+            print("Sender Customer ID not found.")
+        elif recipient is None:
+            print("Recipient Customer ID not found.")
+        elif sender is recipient:
+            print("Cannot transfer money to the same account.")
+        else:
+            amount = float(input("Enter amount to transfer: "))
+            if amount <= 0:
+                print("Amount must be greater than zero.")
+            elif amount > sender.balance:
+                print("Insufficient funds.")
             else:
-                print("Invalid Customer ID")
-        customer.transfer_funds(bene_cust_obj,amount=int(input("Enter amount to transfer: ")))
-        f2.close()
-    elif choice=="4":
-        customer.assign_card(customer.cid)
+                sender.transfer_funds(recipient, amount)
+                with open("customer.dat", "wb") as f2:
+                    for cust in customers:
+                        pickle.dump(cust, f2)
+                print("Updated balances:")
+                print(sender.cname, sender.balance)
+                print(recipient.cname, recipient.balance)
+
+    elif choice == "4":
+        customer_id = input("Enter Customer ID: ")
+        card_number = input("Enter Card Number to Assign: ")
+        customers = []
+        cards = []
+        try:
+            with open("customer.dat", "rb") as f:
+                while True:
+                    try:
+                        customers.append(pickle.load(f))
+                    except EOFError:
+                        break
+        except FileNotFoundError:
+            print("No customer file found.")
+            continue
+        try:
+            with open("card.dat", "rb") as f:
+                while True:
+                    try:
+                        cards.append(pickle.load(f))
+                    except EOFError:
+                        break
+        except FileNotFoundError:
+            print("No card file found.")
+            continue
+        selected_customer = None
+        for cust in customers:
+            if cust.cid == customer_id:
+                selected_customer = cust
+                break
+        selected_card = None
+        for c in cards:
+            if c.card_no == card_number:
+                selected_card = c
+                break
+        if selected_customer is None:
+            print("Customer ID not found.")
+        elif selected_card is None:
+            print("Card number not found.")
+        elif any(c.card_no == selected_card.card_no
+                 for c in selected_customer.credit_card):
+            print("This card is already assigned to this customer.")
+        else:
+            selected_customer.assign_card(selected_card)
+            with open("customer.dat", "wb") as f:
+                for cust in customers:
+                    pickle.dump(cust, f)
+            print("Card assigned successfully!")
+
     elif choice=="5":
         customer.display_customers()
         f2=open("customer.dat","rb")
@@ -88,6 +176,7 @@ while True:
             except(EOFError):
                 break
         f2.close()
+
     elif choice=="6":
         card.display_card()
         f2=open("card.dat","rb")
@@ -101,8 +190,10 @@ while True:
             except(EOFError):
                 break
         f2.close()
+
     elif choice=="7":
         break
+
     else:
         print("Invalid choice")
 
